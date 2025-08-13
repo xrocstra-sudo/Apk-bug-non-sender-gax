@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FoxAttacker — Simulasi (Creator GaxOffc25)</title>
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+  :root{
+    --bg1:#06050a; --bg2:#0b050b;
+    --neon1:#ff2d68; --neon2:#ff9a2d; --glass: rgba(255,255,255,0.04);
+    --accent: linear-gradient(90deg,var(--neon1),var(--neon2));
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#fff;background:
+    radial-gradient(800px 300px at 10% 10%, rgba(255,0,80,0.04), transparent),
+    linear-gradient(180deg,var(--bg1),var(--bg2)); -webkit-font-smoothing:antialiased}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+  .panel{
+    width:420px;border-radius:16px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.22));
+    box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 40px rgba(255,0,80,0.03) inset;
+    border:1px solid rgba(255,255,255,0.03); position:relative; overflow:hidden;
+    transform: perspective(1200px) rotateX(4deg);
+  }
+
+  /* neon frame */
+  .panel:before{
+    content:"";position:absolute;inset:0;border-radius:16px;padding:2px;
+    background:linear-gradient(90deg, rgba(255,45,104,0.12), rgba(255,154,45,0.08));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+  }
+
+  header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .hamb{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+  .hamb .bars{width:20px;height:2px;background:linear-gradient(90deg,var(--neon1),var(--neon2));border-radius:2px;box-shadow:0 1px 0 rgba(255,255,255,0.02)}
+  .title{flex:1}
+  .appname{font-weight:800;letter-spacing:2px;font-size:18px}
+  .sub{font-size:12px;opacity:0.8;color:#ffb3c0}
+
+  .logo{
+    width:64px;height:64px;border-radius:12px;background:linear-gradient(180deg,#2b0011,#530018);
+    display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 10px 30px rgba(255,0,80,0.06);
+  }
+
+  form{display:grid;gap:10px}
+  label{font-size:12px;color:#ffb3c0;opacity:0.95;margin-bottom:6px}
+  input[type="text"], input[type="number"], select{
+    width:100%;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.03);
+    color:#fff;font-size:14px;outline:none;
+  }
+  .row{display:flex;gap:8px}
+  .col{flex:1}
+
+  .controls{display:flex;gap:8px;margin-top:6px}
+  .btn{
+    flex:1;padding:11px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon1),var(--neon2));
+    color:#111;font-weight:800;cursor:pointer;box-shadow:0 8px 30px rgba(255,45,104,0.16);
+  }
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#ffb3b3;box-shadow:none}
+  .btn.warn{background:linear-gradient(90deg,#ffd24d,#ff8a2d);color:#111}
+
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;color:#ffb3b3}
+  .meta .status{font-weight:800;color:#fff}
+
+  .progress{height:10px;background:rgba(255,255,255,0.03);border-radius:10px;margin-top:8px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#ff5b7a,#ffd05b);transition:width 200ms linear}
+
+  .log{
+    margin-top:12px;height:220px;background:rgba(0,0,0,0.6);border-radius:10px;padding:10px;overflow:auto;border:1px solid rgba(255,255,255,0.02);
+    font-family:var(--mono);font-size:12px;color:#cfd8e3;
+  }
+  .log-line{white-space:pre-wrap;margin-bottom:4px;opacity:0.95}
+  .log .success{color:#bff7d0}
+  .log .fail{color:#ffb3c0}
+  .log .meta-small{font-size:11px;opacity:0.75;margin-top:6px}
+
+  footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:#ffb3b3}
+  .creator{opacity:0.95}
+
+  /* little UI extras */
+  .small-muted{font-size:12px;color:#ffb3b3;opacity:0.8}
+  .switch{display:inline-flex;align-items:center;gap:8px}
+
+  /* menu popup */
+  .menu{
+    position:fixed;left:18px;top:18px;background:linear-gradient(180deg,#08050a,#160614);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);
+    z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;
+  }
+  .menu.show{display:block}
+  .preset{display:flex;gap:8px;margin-top:8px}
+  .preset button{padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#ffb3b3;cursor:pointer}
+
+  @media (max-width:460px){
+    .panel{width:94vw;padding:12px}
+    .logo{display:none}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel" role="application" aria-label="FoxAttacker Simulasi">
+      <header>
+        <div class="hamb" id="hamb" title="Menu">
+          <div class="bars"></div>
+        </div>
+        <div class="title" style="min-width:0">
+          <div class="appname">FoxAttacker</div>
+          <div class="sub">Simulasi virtex — Creator GaxOffc25</div>
+        </div>
+        <div class="logo" title="FoxAttacker logo">
+          <!-- mask-like svg -->
+          <svg width="44" height="44" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <circle cx="32" cy="32" r="30" fill="rgba(0,0,0,0.12)"/>
+            <path d="M18 40c6-6 22-6 28 0" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.95"/>
+            <circle cx="24" cy="26" r="4" fill="#fff"/>
+            <circle cx="40" cy="26" r="4" fill="#fff"/>
+          </svg>
+        </div>
+      </header>
+
+      <form id="simForm" onsubmit="return false;">
+        <div>
+          <label for="target">Masukkan nomor target (contoh: 62812xxxx)</label>
+          <input id="target" type="text" placeholder="62812..." autocomplete="off" />
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label for="count">Jumlah virtex</label>
+            <input id="count" type="number" min="1" max="5000" value="50" />
+          </div>
+          <div style="width:130px">
+            <label for="interval">Interval (ms)</label>
+            <input id="interval" type="number" min="20" max="5000" value="250" />
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="startBtn" class="btn" type="button">Start</button>
+          <button id="pauseBtn" class="btn ghost" type="button">Pause</button>
+          <button id="stopBtn" class="btn ghost" type="button">Stop</button>
+        </div>
+
+        <div class="meta">
+          <div>Status: <span class="status" id="status">Idle</span></div>
+          <div class="small-muted">Est. sisa: <span id="eta">--:--</span></div>
+        </div>
+
+        <div class="progress" aria-hidden="true">
+          <i id="bar"></i>
+        </div>
+
+        <div class="log" id="log" aria-live="polite" aria-atomic="false"></div>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="copyLog" class="btn ghost" type="button">Copy Log</button>
+          <button id="exportLog" class="btn ghost" type="button">Export .txt</button>
+          <label class="switch" title="Sound">
+            <input id="soundToggle" type="checkbox" checked /> <span class="small-muted">Sound</span>
+          </label>
+        </div>
+
+      </form>
+
+      <footer>
+        <div class="creator">Creator GaxOffc25</div>
+        <div class="small-muted">FoxAttacker — Simulasi Visual</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Menu popup -->
+  <div class="menu" id="menu">
+    <div style="font-weight:800;margin-bottom:8px">Menu — Preset & Tema</div>
+    <div class="preset">
+      <button data-count="20" data-interval="300">Quick 20</button>
+      <button data-count="50" data-interval="250">Normal 50</button>
+      <button data-count="300" data-interval="80">Max 300</button>
+      <button data-count="1000" data-interval="40">Crazy 1000</button>
+    </div>
+    <div style="margin-top:10px">
+      <label class="small-muted">Theme</label>
+      <select id="themeSel">
+        <option value="neon">Neon Red</option>
+        <option value="blue">Deep Blue</option>
+        <option value="green">Acid Green</option>
+      </select>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button id="closeMenu" class="btn ghost">Close</button>
+    </div>
+  </div>
+
+<script>
+/*
+  FoxAttacker — SIMULASI VISUAL
+  ----------------------------
+  IMPORTANT: This is only a visual simulator. No network requests are made.
+*/
+
+(() => {
+  // Elements
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const targetEl = document.getElementById('target');
+  const countEl = document.getElementById('count');
+  const intervalEl = document.getElementById('interval');
+  const logEl = document.getElementById('log');
+  const statusEl = document.getElementById('status');
+  const bar = document.getElementById('bar');
+  const etaEl = document.getElementById('eta');
+  const copyBtn = document.getElementById('copyLog');
+  const exportBtn = document.getElementById('exportLog');
+  const soundToggle = document.getElementById('soundToggle');
+
+  const menuBtn = document.getElementById('hamb');
+  const menu = document.getElementById('menu');
+  const closeMenu = document.getElementById('closeMenu');
+
+  // sound (tiny built-in via WebAudio)
+  let audioCtx = null;
+  function playTone(freq=880, dur=0.06, vol=0.06) {
+    if (!soundToggle.checked) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.value = vol;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      o.stop(audioCtx.currentTime + dur + 0.01);
+    } catch (e) { /* ignore audio errors */ }
+  }
+
+  // state
+  let running = false;
+  let paused = false;
+  let current = 0;
+  let total = 0;
+  let timer = null;
+  let startTime = 0;
+
+  function maskNumber(num) {
+    if (!num) return '(no number)';
+    const s = String(num).replace(/\s+/g,'');
+    // if international prefix present keep first 3 digits
+    if (s.length <= 6) return s.replace(/.(?=.{2})/g, '•');
+    return s.slice(0,4) + '•'.repeat(Math.max(0, s.length - 7)) + s.slice(-3);
+  }
+
+  function fmtTime() {
+    const d = new Date(); return d.toLocaleTimeString();
+  }
+
+  function addLogLine(text, cls='') {
+    // typewriter-like small delay for realism
+    const div = document.createElement('div');
+    div.className = 'log-line ' + cls;
+    div.textContent = text;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function addAnimatedLog(text, cls='') {
+    // simulate small typing animation by revealing characters quickly
+    const div = document.createElement('div');
+    div.className = 'log-line ' + cls;
+    div.textContent = '';
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+    let i = 0;
+    const speed = Math.max(6, 18 - Math.min(12, Math.floor(Math.random()*12)));
+    const t = setInterval(()=> {
+      if (i >= text.length) { clearInterval(t); return; }
+      div.textContent += text[i++];
+      logEl.scrollTop = logEl.scrollHeight;
+    }, speed);
+  }
+
+  function updateProgress() {
+    const pct = total ? Math.round((current / total) * 100) : 0;
+    bar.style.width = pct + '%';
+    // ETA
+    const elapsed = (Date.now() - startTime) / 1000;
+    const per = current ? (elapsed / current) : 0;
+    const remain = Math.max(0, Math.round(per * (total - current)));
+    const mm = String(Math.floor(remain/60)).padStart(2,'0');
+    const ss = String(remain % 60).padStart(2,'0');
+    etaEl.textContent = `${mm}:${ss}`;
+  }
+
+  function randomId() {
+    return Math.floor(1000 + Math.random()*8999);
+  }
+
+  function startSim() {
+    if (running) return;
+    const target = targetEl.value.trim();
+    if (!target || target.length < 5) {
+      alert('Masukkan nomor target yang valid (contoh: 62812...)');
+      targetEl.focus();
+      return;
+    }
+    total = Math.max(1, Math.min(5000, Number(countEl.value) || 50));
+    const interval = Math.max(20, Number(intervalEl.value) || 250);
+
+    running = true; paused = false; current = 0; startTime = Date.now();
+    logEl.innerHTML = '';
+    statusEl.textContent = 'Running';
+    addLogLine(`${fmtTime()} — Memulai simulasi ke ${maskNumber(target)} sebanyak ${total} kali...`, 'meta-small');
+    playTone(880,0.06,0.06);
+
+    timer = setInterval(() => {
+      if (!running || paused) return;
+      current++;
+      // simulate success or failure
+      const success = Math.random() > 0.04; // mostly success
+      const id = randomId();
+      const masked = maskNumber(target);
+      // 80% lines print normally, 20% animated
+      const text = `[${id}] Request ${success ? 'berhasil' : 'gagal'} ke ${masked} (${current}/${total})`;
+      if (Math.random() > 0.8) addAnimatedLog(text, success ? 'success' : 'fail');
+      else addLogLine(text, success ? 'success' : 'fail');
+
+      // small sound per request but subtle
+      if (success) playTone(1200, 0.02, 0.02);
+      else playTone(420, 0.04, 0.03);
+
+      updateProgress();
+
+      if (current >= total) {
+        stopSim(true);
+      }
+    }, interval);
+
+    // micro animation: flicker a bit
+    flashTitle();
+  }
+
+  function pauseSim() {
+    if (!running) return;
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    statusEl.textContent = paused ? 'Paused' : 'Running';
+    playTone(paused ? 320 : 880, 0.06, 0.04);
+  }
+
+  function stopSim(finished=false) {
+    if (!running) {
+      statusEl.textContent = 'Idle'; return;
+    }
+    running = false; paused = false;
+    clearInterval(timer); timer = null;
+    statusEl.textContent = finished ? 'Selesai' : 'Dihentikan';
+    addLogLine(`${fmtTime()} — Simulasi ${finished ? 'selesai' : 'dihentikan'} (${current}/${total})`, 'meta-small');
+    playTone(680, 0.06, 0.06);
+    updateProgress();
+  }
+
+  // export log
+  function exportLogToFile() {
+    const lines = Array.from(logEl.querySelectorAll('.log-line')).map(x => x.textContent);
+    const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `foxattacker_log_${Date.now()}.txt`;
+    document.body.appendChild(a); a.click();
+    a.remove(); URL.revokeObjectURL(url);
+  }
+
+  // copy log to clipboard
+  async function copyLogToClipboard() {
+    const lines = Array.from(logEl.querySelectorAll('.log-line')).map(x => x.textContent).join('\n');
+    try {
+      await navigator.clipboard.writeText(lines);
+      alert('Log disalin ke clipboard.');
+    } catch (e) {
+      // fallback
+      const ta = document.createElement('textarea'); ta.value = lines; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+      alert('Log disalin (fallback).');
+    }
+  }
+
+  // keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') startSim();
+    if (e.key === 'Escape') stopSim(false);
+    if (e.key === ' ') { e.preventDefault(); pauseSim(); }
+  });
+
+  // title flash when starting
+  function flashTitle() {
+    const orig = document.title;
+    let i = 0, it = setInterval(()=> {
+      document.title = (i%2===0) ? '⚠ FoxAttacker running' : 'FoxAttacker — Simulasi';
+      i++;
+      if (!running) { clearInterval(it); document.title = orig; }
+    }, 800);
+  }
+
+  // menu interactions
+  menuBtn.addEventListener('click', () => menu.classList.toggle('show'));
+  closeMenu.addEventListener('click', () => menu.classList.remove('show'));
+  menu.querySelectorAll('.preset button').forEach(b => {
+    b.addEventListener('click', () => {
+      countEl.value = b.dataset.count;
+      intervalEl.value = b.dataset.interval;
+    });
+  });
+  document.getElementById('themeSel').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (v === 'neon') {
+      document.documentElement.style.setProperty('--neon1','#ff2d68');
+      document.documentElement.style.setProperty('--neon2','#ff9a2d');
+    } else if (v === 'blue') {
+      document.documentElement.style.setProperty('--neon1','#3db7ff');
+      document.documentElement.style.setProperty('--neon2','#0056ff');
+    } else if (v === 'green') {
+      document.documentElement.style.setProperty('--neon1','#3dffb7');
+      document.documentElement.style.setProperty('--neon2','#4dff3d');
+    }
+    menu.classList.remove('show');
+  });
+
+  // wire buttons
+  startBtn.addEventListener('click', startSim);
+  pauseBtn.addEventListener('click', pauseSim);
+  stopBtn.addEventListener('click', () => stopSim(false));
+  copyBtn.addEventListener('click', copyLogToClipboard);
+  exportBtn.addEventListener('click', exportLogToFile);
+
+  // small UX: prefill placeholder & friendly mask preview on blur
+  targetEl.placeholder = '62812xxxx (contoh)';
+  targetEl.addEventListener('blur', () => {
+    // show masked preview in a tiny last log line
+    if (targetEl.value.trim()) {
+      const masked = maskNumber(targetEl.value.trim());
+      addLogLine(`${fmtTime()} — Target diset ke ${masked}`, 'meta-small');
+    }
+  });
+
+  // accessibility: announce start/stop
+  const form = document.getElementById('simForm');
+  form.addEventListener('submit', (e) => e.preventDefault());
+
+  // initial message
+  addLogLine('FoxAttacker — Visual Simulator ready. Creator GaxOffc25', 'meta-small');
+})();
+</script>
+</body>
+</html>
